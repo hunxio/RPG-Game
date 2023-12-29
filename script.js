@@ -1,8 +1,12 @@
-/*
-PROBLEMS TO FIX 
-1. The shop doesn't change the "sale" chat updating the weapon everytime you buy a new one, it alwyas shows the dagger as choice;
-2. Fixing some values from rewards and monster stats;
-*/
+/*************************************************************************************************************************************** 
+ *                                                    PROBLEMS TO FIX                                                                  *
+ *                                                                                                                                     *
+ *  1. The shop doesn't change the "sale" chat updating the weapon everytime you buy a new one, it alwyas shows the dagger as choice;  *
+ *  2. Fixing some values from rewards and monster stats;                                                                              *
+ *  3. Make better dialogues;                                                                                                          *
+ *  4. Check why after buying the greatsword, which is the last weapon, your gold can go below 0;                                      *
+ *                                                                                                                                     *
+ ***************************************************************************************************************************************/
 
 
 // Variable Values
@@ -53,7 +57,7 @@ const places = [
   },
   {
     name: "town",
-    "button text": ["Store", "Dungeon", "Cave"],
+    "button text": ["Store", "Dungeon", "Boss"],
     "button function": [goStore, goDungeon, goBoss],
     text: ["What are you up to now?"]
   }
@@ -130,7 +134,7 @@ function fightSlime() {
   monsters[0].health -= attack;
   hp -= monsters[0].attack;
   hpVal.innerText = hp;
-  text.innerText = "The slime has " + monsters[0].health + " health points left."
+  text.innerText = "The " + monsters[0].name + " has " + monsters[0].health + " health points left."
   } else {
     hp -= monsters[0].attack;
     hpVal.innerText = hp;
@@ -152,7 +156,7 @@ function fightSkeleton() {
     monsters[1].health -= attack;
     hp -= monsters[1].attack;
     hpVal.innerText = hp;
-    text.innerText = "The slime has " + monsters[1].health + " health points left."
+    text.innerText = "The " + monsters[1].name + " has " + monsters[1].health + " health points left."
     } else {
       hp -= monsters[0].attack;
       hpVal.innerText = hp;
