@@ -1,20 +1,18 @@
-/*************************************************************************************************************************************** 
+/***************************************************************************************************************************************
  *                                                    PROBLEMS TO FIX                                                                  *
- *                                                                                                                                     *
- *  1. The shop doesn't change the "sale" chat updating the weapon everytime you buy a new one, it alwyas shows the dagger as choice;  *
- *  2. Fixing some values from rewards and monster stats;                                                                              *
- *  3. Make better dialogues;                                                                                                          *
- *  4. Check why after buying the greatsword, which is the last weapon, your gold can go below 0;                                      *
+ *   . Fix when you are dead the game stops and you can't keep interact anymore with buttons                                           *
+ *   . Make better dialogues;                                                                                                          *
  *                                                                                                                                     *
  ***************************************************************************************************************************************/
 
-
 // Variable Values
 let hp = 100;
-let gold = 50;
+let gold = 30;
 let attack = 5;
+let counter = 0; //Everytime you click on a button it will increase, it will be displayed as your highscore Highscore.
 
 // Selectors
+const buttons = document.querySelectorAll(".button"); // Button for counter
 const button1 = document.querySelector("#buttonOne"); // Store Button
 const button2 = document.querySelector("#buttonTwo"); // Dungeon Button
 const button3 = document.querySelector("#buttonThree"); // Boss Button
@@ -27,41 +25,59 @@ const hpVal = document.querySelector("#hpValue"); // Health Points
 const atkVal = document.querySelector("#atkValue"); // Attack
 const goldVal = document.querySelector("#goldValue"); // Gold
 
-const text = document.querySelector("#text");
+const text = document.querySelector("#text"); // Text
 
 // Objects for the weapons, places and monsters in the game
-
 const weapons = [
-  { name: "dagger", power: 30, cost: 20},
-  { name: "sword", power: 50, cost: 60},
-  { name: "greatsword", power: 100, cost: 120},
+  { name: "dagger", power: 30, cost: 20 },
+  { name: "sword", power: 50, cost: 60 },
+  { name: "greatsword", power: 100, cost: 120 },
 ];
 
 const monsters = [
-  { name: "slime", health: 38, attack: 4}, // slime will need 2 hits to die
-  { name: "skeleton", health: 101, attack: 9}, //skeleton will need 3 hits to die
-  //{ name: "evil rooster", health: 50, attack: 60}, //evil rooster will need 6 hits to die
-]
+  { name: "slime", health: 38, attack: 4, reward: 8, originalValue: 38 }, // slime will need 2 hits to die, with dagger
+  { name: "skeleton", health: 101, attack: 9, reward: 19, originalValue: 101 }, // skeleton will need 3 hits to die, with sword
+  { name: "evil rooster", health: 600, attack: 18 }, // evil rooster will need 6 hits to die, with greatsword // if you hit the head 4 times (150*4) it will die but you'll take a lot of damage
+];
+
 const places = [
   {
-    name: 'store',
-    "button text" : ["Buy Potion 10G (+10HP)", "Buy Weapon", "Leave the Store"],
-    "button function" : [buyPotion, buyWeapon, leavePlace],
-    text: ["Welcome in the Store, how can I help you today? We have in sale this " + weapons[0].name + " for only " + weapons[0].cost + "."]
+    name: "store",
+    "button text": ["Buy Potion 10G (+10HP)", "Buy Weapon", "Leave the Store"],
+    "button function": [buyPotion, buyWeapon, leavePlace],
+    text: ["Welcome in the Store, how can I help you today?"],
   },
   {
-    name: 'dungeon',
-    "button text" : ["Fight slime", "Fight skeleton", "Leave the dungeon"],
-    "button function" : [fightSlime, fightSkeleton, leavePlace],
-    text: ["There are plenty of monsters in front of you, what do you want do ?"]
+    name: "dungeon",
+    "button text": ["Fight slime", "Fight skeleton", "Leave the dungeon"],
+    "button function": [fightSlime, fightSkeleton, leavePlace],
+    text: [
+      "There are plenty of monsters in front of you, what do you want do ?",
+    ],
   },
   {
     name: "town",
     "button text": ["Store", "Dungeon", "Boss"],
     "button function": [goStore, goDungeon, goBoss],
-    text: ["What are you up to now?"]
-  }
+    text: ["What are you up to now?"],
+  },
+  {
+    name: "boss",
+    "button text": ["Attack head", "Attack body", "Flee"],
+    "button function": [atkHead, atkBody, leavePlace],
+    text: [
+      "And so you reach the evil entity, you can't properly see because of the fog but...WAIT! That is not a simple rooster, that is the evil rooster 'Hahn'! We have to save the village from this evil creature, what are you going to do ?",
+    ],
+  },
 ];
+
+// The counter will increase everytime you click on a button, giving your final score once you kill the boss
+
+buttons.forEach(function (button) {
+  button.addEventListener("click", function () {
+    counter++;
+  });
+});
 
 // Button actions
 
@@ -69,8 +85,7 @@ button1.onclick = goStore;
 button2.onclick = goDungeon;
 button3.onclick = goBoss;
 
-// Main function recalling objects in places.
-
+// Main functions for locations and fighting.
 function activity(place) {
   button1Text.innerText = place["button text"][0];
   button2Text.innerText = place["button text"][1];
@@ -81,11 +96,48 @@ function activity(place) {
   text.innerText = place.text;
 }
 
+function fight(monster) {
+  if (hp > monster.attack) {
+    if (monster.health > attack) {
+      monster.health -= attack;
+      hp -= monster.attack;
+      hpVal.innerText = hp;
+      text.innerText =
+        "The " +
+        monster.name +
+        " has " +
+        monster.health +
+        " health points left.";
+    } else {
+      hp -= monster.attack;
+      hpVal.innerText = hp;
+      gold += monster.reward;
+      goldVal.innerText = gold;
+      text.innerText =
+        "You have defeated the " +
+        monster.name +
+        ", you obtain " +
+        monster.reward +
+        " gold.";
+      monster.health = monster.originalValue;
+    }
+  } else {
+    hpVal.innerText = 0;
+    text.innerText = " You are dead.";
+  }
+}
+
 // Functions related to the store activities;
 function goStore() {
   document.getElementById("enviroment").src =
     "https://www.dndspeak.com/wp-content/uploads/2021/04/Shop-1.jpg";
- activity(places[0]);
+  activity(places[0]);
+  // Because the weapons[0] will change everytime you buy a new one, it will need to be here the text to make it dynamic.
+  text.innerText = "Welcome in the Store, how can I help you today? We have in sale this " +
+        weapons[0].name +
+        " for only " +
+        weapons[0].cost +
+        " gold.";
 }
 
 function buyPotion() {
@@ -100,19 +152,29 @@ function buyPotion() {
       "It looks like you don't have enough money to buy a potion.";
   }
 }
+
 function buyWeapon() {
+  if (weapons.length > 0) {
   if (gold >= weapons[0].cost) {
     attack = weapons[0].power;
-    gold -= weapons[0].cost + (weapons[0].cost/10);
+    gold -= weapons[0].cost;
+    gold += weapons[0].cost / 10;
     atkVal.innerText = attack;
     goldVal.innerText = gold;
-    text.innerText = "I hope this new weapon will suit your taste, also I will buy your old weapon and give you some gold back.";
+    text.innerText =
+      "I hope this new weapon will suit your taste, also I will buy your old weapon and give you some gold back.";
     weapons.shift();
   } else {
     text.innerText =
-      "Are you sure you have enough money to afford the " + weapons[0].name + "?";
+      "Are you sure you have enough gold to afford the " +
+      weapons[0].name +
+      "?";
+  }
+  } else {
+    text.innerText = "We don't have any new weapons in stock, can I help you with something else?"
   }
 }
+
 function leavePlace() {
   activity(places[2]);
   document.getElementById("enviroment").src =
@@ -128,52 +190,84 @@ function goDungeon() {
 }
 
 function fightSlime() {
-  // monsters { name: "slime", health: 38, attack: 8}
-  if(hp > monsters[0].attack){
-  if(monsters[0].health > attack) {
-  monsters[0].health -= attack;
-  hp -= monsters[0].attack;
-  hpVal.innerText = hp;
-  text.innerText = "The " + monsters[0].name + " has " + monsters[0].health + " health points left."
-  } else {
-    hp -= monsters[0].attack;
-    hpVal.innerText = hp;
-    gold += 8;
-    goldVal.innerText = gold;
-    text.innerText = "You have defeated the slime, you obtain 8 gold";
-    monsters[0].health= 38;
-  }
-} else {
-  hpVal.innerText = 0;
-  text.innerText = " You are dead."
-}
+  // monsters { name: "skeleton", health: 101, attack: 9, reward: 19, originalValue: 101 } pos 0
+  fight(monsters[0]);
 }
 
 function fightSkeleton() {
-  // monsters { name: "skeleton", health: 115, attack: 13}
-  if(hp > monsters[1].attack){
-    if(monsters[1].health > attack) {
-    monsters[1].health -= attack;
-    hp -= monsters[1].attack;
-    hpVal.innerText = hp;
-    text.innerText = "The " + monsters[1].name + " has " + monsters[1].health + " health points left."
-    } else {
-      hp -= monsters[0].attack;
-      hpVal.innerText = hp;
-      gold += 28;
-      goldVal.innerText = gold;
-      text.innerText = "You have defeated the skeleton, you obtain 28 gold";
-      monsters[1].health= 115;
-    }
-  } else {
-    hpVal.innerText = 0;
-    text.innerText = " You are dead."
-  }
+ // { name: "skeleton", health: 101, attack: 9, reward: 19, originalValue: 101 } pos 1
+  fight(monsters[1]);
 }
 
 //Functions related to the boss fight activities
 function goBoss() {
-  console.log("Hi")
+  document.getElementById("enviroment").src =
+    "https://i.pinimg.com/564x/88/10/f9/8810f9553f3c207b3dc2bf63121f17a9.jpg";
+  activity(places[3]);
 }
 
+function atkHead() {
+  // { name: "evil rooster", health: 600, attack: 18} pos 2
+  if (hp > monsters[2].attack + 20) {
+    if (monsters[2].health > attack + 50) {
+      monsters[2].health -= attack + 50;
+      hp -= monsters[2].attack + 20;
+      hpVal.innerText = hp;
+      text.innerText =
+        "You go for the head of the monster, it is a heavy hit but he also catches you unprepared and peaks you heavily. The " +
+        monsters[2].name +
+        " has " +
+        monsters[2].health +
+        " health points left.";
+    } else {
+      hp -= monsters[2].attack;
+      hpVal.innerText = hp;
+      text.innerText =
+        "After " +
+        counter +
+        " days the village of RPG Game is free from the calamity of the evil rooster, you proved your courage to the people and they elect you as the new ruler of the village!";
+    }
+  } else {
+    hpVal.innerText = 0;
+    text.innerText =
+      " You are dead, the evil rooster will take over the village and start its kingdom.";
+  }
+}
 
+function atkBody() {
+  if (hp > monsters[2].attack + 10) {
+    if (attack > 5) {
+      if (monsters[2].health > attack + 10) {
+        monsters[2].health -= attack - 15;
+        hp -= monsters[2].attack + 10;
+        hpVal.innerText = hp;
+        text.innerText =
+          "You go for the body of the monster, it is a normal hit but it also catches you and scatches you with its fangs. The " +
+          monsters[2].name +
+          " has " +
+          monsters[2].health +
+          " health points left.";
+      } else {
+        hp -= monsters[2].attack;
+        hpVal.innerText = hp;
+        text.innerText =
+          "After " +
+          counter +
+          " days the village of RPG Game is free from the calamity of the evil rooster, you proved your courage to the people and they elect you as the new ruler of the village!";
+      }
+    } else if (attack === 5) {
+      hp -= monsters[2].attack + 5;
+      hpVal.innerText = hp;
+      text.innerText =
+        "You aim for the body but your weapon is too weak to evenscratch the beast, it heals back and hits you with its fangs. The " +
+        monsters[2].name +
+        " has " +
+        monsters[2].health +
+        " health points left.";
+    }
+  } else {
+    hpVal.innerText = 0;
+    text.innerText =
+      " You are dead, the evil rooster will take over the village and start its kingdom.";
+  }
+}
