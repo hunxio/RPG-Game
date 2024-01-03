@@ -42,7 +42,7 @@ const weapons = [
 ];
 
 const monsters = [
-  { name: "slime", currrentHealth: 38, attack: 4, reward: 8, totalHealth: 38 }, // slime will need 2 hits to die, with dagger
+  { name: "slime", currentHealth: 38, attack: 4, reward: 8, totalHealth: 38 }, // slime will need 2 hits to die, with dagger
   {
     name: "skeleton",
     currentHealth: 101,
